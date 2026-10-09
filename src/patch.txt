@@ -1,0 +1,60 @@
+#- name: RaC2 movement mod
+#- author: Joe-GH-18, robo
+#- href: https://github.com/Joe-GH-18/RAC-1-Mods
+#- version: 3.8
+#- description: Adds strafing, RaC2 movement, and charge boots in place of grindboots.
+0x931400: data/sound.bin
+0x940000: data/anim.bin
+0x945000: data/back_anim.bin
+
+# Camera rotation speed "Fast" = RC2's: 2.2 degrees/frame instead of 1.6 (table 0x71D580: Slow, Medium, Fast)
+0x71D588: 0x3D1D466E
+
+# Camera follow (how hard the camera pulls its offset towards where Ratchet has gone; set at 0x2fef8..0x2ff88):
+# RC2's 0.85 instead of 0.75. Its ramp's two constants, then the steady value, which RC1 stores as
+# an immediate (lis r4, 0x3f40; stw r4, -0x15b0(r3)) and now stores from f31, the first constant.
+0x2F528: 0x3F59999A
+0x2F52C: 0xBF59999A
+0x2FF88: 0xD3E3EA50
+
+# The RYNO counts as a weapon fired, not a gun held while it fires, as RC2's RYNO II does (its
+# "hold" is 0): a RYNO salvo that ends a charge leaves him skidding instead of stopping him in the
+# gun stance. Weapon table 0x721000 + item 0x17 * 0x4c, +0x30 (the gun flag, hero +0x20aa).
+0x721704: 0x00000000
+
+# Ground snap 0x88370, when Ratchet is deeper under the ground than his vertical speed: RC2's
+# spring (0x8138c8: stiffness 0.05, damping 0.17, at most 5 units/s) instead of RC1's (0.057, 0.3,
+# 2 units/s). Its constant pool, read only by those two paths.
+0x88364: 0x3D4CCCCD
+0x88368: 0x3E2E147B
+0x8836C: 0x40A00000
+
+# In the air (RC2's numbers): the brake with the stick let go and +0x30a set, 6 -> 11 units/s^2 (the
+# other brake is a hook in src/asm/move_hooks.s) [RC2 0x82f358]; and the speed the stick asks for in
+# every jump, 5.7 -> 5.95 units/s, as the walking's run speed [RC2 0x844810].
+0x9DE1C: 0x41300000
+0xB71A4: 0x40BE6666
+
+# Top turn speed while attacking (the wrench, the glove throw, ...), 15.01 -> 16.93 rad/s; its two
+# other reads keep 15.01 (hooks in src/asm/move_hooks.s) [RC2 table +0x188].
+0xAAD4C: 0x41877003
+
+# The Charge Boots (the Grindboots' item, 0x1d) cost 1,000 bolts instead of 2,000: the item price
+# table 0x737D30 + 0x1d * 0x18, the price (+0, which the scientist's dialog checks against the bolts
+# at 0x4d34f8 and takes at 0x4d3eb0) and its other copy (+4).
+0x737FE8: 0x000003E8
+0x737FEC: 0x000003E8
+
+# No crouching inside look mode (L1), as in RC2: RC1 plays the crouch animation (13) while R1 or R2
+# is held, in its own look mode (0xbfe80) and in a weapon's (state 0x1e, 0xc7fb4), without leaving
+# it. Each test's beq to the standing branch becomes a b.
+0xBFE90: 0x4800004C
+0xC7FC4: 0x4800004C
+
+# RYNO: don't lock his hand for the salvo (hero +0x10ac = 2, the RYNO's stb r7, 0x10ac(r29) when it
+# fires and while it is held), which stops quick select (Triangle, 0xbe36c), the pause menu (Start,
+# 0x167388) and every weapon switch (0x864a8). Switching mid-salvo puts the RYNO away as any switch
+# does: the missiles still to come are dropped, those in flight carry on, the ammo is the salvo's one.
+# The Suck Cannon and the wrench keep their locks.
+0x389778: 0x60000000
+0x389930: 0x60000000

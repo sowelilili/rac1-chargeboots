@@ -1,0 +1,6 @@
+bin/*
+obj/*
+/patch.txt
+.vs/*
+EBOOT.BIN
+EBOOT.ELF.bak
